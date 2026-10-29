@@ -2,16 +2,16 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 COPY . .
 RUN npm run build
 
-# Runtime distroless
+# ===== STAGE 2: RUNTIME (Distroless) =====
 FROM gcr.io/distroless/nodejs20-debian12 AS runtime
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-# Usuario non-root ya incluido en distroless (nonroot:nonroot)
+USER nonroot:nonroot
 EXPOSE 3000
-CMD ["dist/server.js"]
+CMD ["node", "dist/server.js"]

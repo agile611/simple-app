@@ -1,0 +1,20 @@
+# ===== STAGE 1: BUILDER (Bun) =====
+FROM oven/bun:1-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN bun install
+COPY . .
+# Compile TypeScript to single native binary
+RUN bun build --compile --outfile server src/server.ts
+
+# ===== STAGE 2: RUNTIME (Scratch) =====
+FROM scratch AS runtime
+WORKDIR /app
+# Copy the compiled binary
+COPY --from=builder /app/server /server
+# Copy CA certificates for HTTPS/TLS
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Non-root user (UID 1000)
+USER 1000:1000
+EXPOSE 3000
+ENTRYPOINT ["/server"]
