@@ -7,9 +7,11 @@ COPY . .
 RUN npm run build && \
     npx pkg dist/server.js --target node18-linux-x64 --output server
 
-# ===== STAGE 2: RUNTIME (Scratch) =====
-FROM scratch AS runtime
+# ===== STAGE 2: RUNTIME (Alpine + glibc) =====
+FROM alpine:3.24 AS runtime
 WORKDIR /app
+# Install glibc compatibility for pkg binaries
+RUN apk add --no-cache libstdc++ gcompat
 COPY --from=builder /app/server /server
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 USER 1000:1000
