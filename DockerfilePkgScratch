@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build && \
-    npx pkg dist/server.js --target node20-linux-x64 --output server
+    npx pkg dist/server.js --target node18-linux-x64 --output server
 
 # ===== STAGE 2: RUNTIME (Scratch) =====
 FROM scratch AS runtime
