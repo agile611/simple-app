@@ -44,7 +44,6 @@ docker build -t simple-app .
 docker run -d \
   --name simple-app \
   -p 3000:3000 \
-  --env-file .env \
   simple-app
 
 # View logs
