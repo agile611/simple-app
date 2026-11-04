@@ -1,0 +1,17 @@
+# Dockerfile.readonly
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Non-root
+RUN addgroup -g 1001 -S appgroup && adduser -S -u 1001 -G appgroup appuser
+
+# Preparar dirs writables
+USER root
+RUN mkdir -p /tmp/app /var/run/app && chown -R appuser:appgroup /tmp/app /var/run/app
+USER appuser
+
+CMD ["node", "dist/server.js"]
