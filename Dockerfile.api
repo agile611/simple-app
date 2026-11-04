@@ -1,0 +1,32 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# 1. Create the non-root user and group first
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S -u 1001 -G appgroup appuser
+
+# 2. Copy dependency files and install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# 3. Copy source code
+COPY . .
+
+# 4. Build using BuildKit secret mount
+# (The secret will be available temporarily at /run/secrets/my_secret during this command)
+RUN --mount=type=secret,id=my_secret \
+    export SECRET_KEY=$(cat /run/secrets/my_secret) && \
+    npm run build
+
+# 5. Grant ownership of /app to the non-root user
+RUN chown -R appuser:appgroup /app
+
+# 6. Prepare and secure additional writable directories
+RUN mkdir -p /tmp/app /var/run/app && \
+    chown -R appuser:appgroup /tmp/app /var/run/app
+
+# 7. Switch to the non-root user for runtime
+USER appuser
+
+CMD ["node", "dist/server.js"]
